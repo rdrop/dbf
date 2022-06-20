@@ -32,7 +32,7 @@ module DBF
     #     t.column :notes, :text
     #   end
     #
-    # @param format [Symbol] format Valid options are :activerecord and :json
+    # @param format [Symbol] format Valid options are :activerecord, :sequel, :snowflake, and :json
     # @param table_only [Boolean]
     # @return [String]
     def schema(format = :activerecord, table_only = false)
@@ -72,11 +72,11 @@ module DBF
 
     def snowflake_schema(table_only = false) # :nodoc:
       s = ''
-      s << "create or replace table enterprises (\n" unless table_only
+      s << "create or replace table #{name} (\n"
       columns.each do |column|
         s << "  #{snowflake_schema_definition(column)}"
       end
-      s << ")\n" unless table_only
+      s << ")\n"
       s
     end
 
