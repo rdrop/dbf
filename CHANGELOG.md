@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.1 - FORK
+
+- Print table schema for Snowflake
+
 ## 4.2.0
 
 - Initial support for dBase 7 files
@@ -74,7 +78,7 @@
 - Uninitialized (N)umbers should return nil
 
 ## 3.0.2
-  
+
 - Performance improvements for large files
 
 ## 3.0.1
@@ -127,7 +131,7 @@
 - use correct FoxPro memo block size
 
 ## 2.0.4
-  
+
 - memo fields return nil if memo file is missing
 
 ## 2.0.3
@@ -150,19 +154,19 @@
 - #43 Improve handling of record attributes
 
 ## 1.7.5
-  
+
 - fixes FoxPro currency (Y) fields
 
 ## 1.7.4
-  
+
 - Replace Memo Type with Memo File boolean in command-line utility summary output
 
 ## 1.7.3
-  
+
 - find_all/find_first should ignore deleted records
 
 ## 1.7.2
-  
+
 - Fix integer division under Ruby 1.8 when requiring mathn
   standard library (see http://bugs.ruby-lang.org/issues/2121)
 

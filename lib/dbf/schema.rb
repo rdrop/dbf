@@ -1,7 +1,7 @@
 module DBF
   # The Schema module is mixin for the Table class
   module Schema
-    FORMATS = [:activerecord, :json, :sequel].freeze
+    FORMATS = [:activerecord, :json, :sequel, :snowflake].freeze
 
     OTHER_DATA_TYPES = {
       'Y' => ':decimal, :precision => 15, :scale => 4',
@@ -70,6 +70,16 @@ module DBF
       s
     end
 
+    def snowflake_schema(table_only = false) # :nodoc:
+      s = ''
+      s << "create or replace table enterprises (\n" unless table_only
+      columns.each do |column|
+        s << "  #{snowflake_schema_definition(column)}"
+      end
+      s << ")\n" unless table_only
+      s
+    end
+
     def json_schema(_table_only = false) # :nodoc:
       columns.map(&:to_hash).to_json
     end
@@ -90,10 +100,18 @@ module DBF
       ":#{column.underscored_name}, #{schema_data_type(column, :sequel)}\n"
     end
 
+    # Snowflake schema definition
+    #
+    # @param column [DBF::Column]
+    # @return [String]
+    def snowflake_schema_definition(column)
+      "#{column.underscored_name} #{schema_data_type(column, :sequel)},\n"
+    end
+
     def schema_data_type(column, format = :activerecord) # :nodoc:
       case column.type
       when *%w[N F I]
-        number_data_type(column)
+        number_data_type(format, column)
       when *%w[Y D T L M B]
         OTHER_DATA_TYPES[column.type]
       else
@@ -101,13 +119,19 @@ module DBF
       end
     end
 
-    def number_data_type(column)
-      column.decimal > 0 ? ':float' : ':integer'
+    def number_data_type(format, column)
+      if format == :sequel
+        column.decimal > 0 ? 'float' : 'integer'
+      else
+        column.decimal > 0 ? ':float' : ':integer'
+      end
     end
 
     def string_data_format(format, column)
       if format == :sequel
         ":varchar, :size => #{column.length}"
+      elsif format == :snowflake
+        "varchar(#{column.length})"
       else
         ":string, :limit => #{column.length}"
       end
