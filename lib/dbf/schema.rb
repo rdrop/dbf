@@ -105,7 +105,7 @@ module DBF
     # @param column [DBF::Column]
     # @return [String]
     def snowflake_schema_definition(column)
-      "#{column.underscored_name} #{schema_data_type(column, :sequel)},\n"
+      "#{column.underscored_name} #{schema_data_type(column, :snowflake)},\n"
     end
 
     def schema_data_type(column, format = :activerecord) # :nodoc:
@@ -120,7 +120,7 @@ module DBF
     end
 
     def number_data_type(format, column)
-      if format == :sequel
+      if format == :snowflake
         column.decimal > 0 ? 'float' : 'integer'
       else
         column.decimal > 0 ? ':float' : ':integer'
