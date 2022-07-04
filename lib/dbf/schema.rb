@@ -1,7 +1,7 @@
 module DBF
   # The Schema module is mixin for the Table class
   module Schema
-    FORMATS = [:activerecord, :json, :sequel, :snowflake].freeze
+    FORMATS = [:activerecord, :json, :sequel, :postgresql].freeze
 
     OTHER_DATA_TYPES = {
       'Y' => ':decimal, :precision => 15, :scale => 4',
@@ -10,6 +10,15 @@ module DBF
       'L' => ':boolean',
       'M' => ':text',
       'B' => ':binary'
+    }.freeze
+
+    POSTGRESQL_OTHER_DATA_TYPES = {
+      'Y' => 'double precision',
+      'D' => 'date',
+      'T' => 'timestamp with time zone',
+      'L' => 'boolean',
+      'M' => 'text',
+      'B' => 'bytea'
     }.freeze
 
     # Generate an ActiveRecord::Schema
@@ -32,7 +41,7 @@ module DBF
     #     t.column :notes, :text
     #   end
     #
-    # @param format [Symbol] format Valid options are :activerecord, :sequel, :snowflake, and :json
+    # @param format [Symbol] format Valid options are :activerecord, :sequel, :postgresql, and :json
     # @param table_only [Boolean]
     # @return [String]
     def schema(format = :activerecord, table_only = false)
@@ -70,13 +79,13 @@ module DBF
       s
     end
 
-    def snowflake_schema(table_only = false) # :nodoc:
+    def postgresql_schema(_table_only = false) # :nodoc:
       s = ''
       s << "create or replace table #{name} (\n"
       columns.each do |column|
-        s << "  #{snowflake_schema_definition(column)}"
+        s << "  #{postgresql_schema_definition(column)}"
       end
-      s << ")\n"
+      s << ");\n"
       s
     end
 
@@ -100,12 +109,12 @@ module DBF
       ":#{column.underscored_name}, #{schema_data_type(column, :sequel)}\n"
     end
 
-    # Snowflake schema definition
+    # postgresql schema definition
     #
     # @param column [DBF::Column]
     # @return [String]
-    def snowflake_schema_definition(column)
-      "#{column.underscored_name} #{schema_data_type(column, :snowflake)},\n"
+    def postgresql_schema_definition(column)
+      "#{column.underscored_name} #{schema_data_type(column, :postgresql)},\n"
     end
 
     def schema_data_type(column, format = :activerecord) # :nodoc:
@@ -113,24 +122,32 @@ module DBF
       when *%w[N F I]
         number_data_type(format, column)
       when *%w[Y D T L M B]
-        OTHER_DATA_TYPES[column.type]
+        date_data_type(format, column)
       else
         string_data_format(format, column)
       end
     end
 
     def number_data_type(format, column)
-      if format == :snowflake
-        column.decimal > 0 ? 'float' : 'integer'
+      if format == :postgresql
+        column.decimal > 0 ? 'real' : 'integer'
       else
         column.decimal > 0 ? ':float' : ':integer'
+      end
+    end
+
+    def date_data_type(format, column)
+      if format == :postgresql
+        POSTGRESQL_OTHER_DATA_TYPES[column.type]
+      else
+        OTHER_DATA_TYPES[column.type]
       end
     end
 
     def string_data_format(format, column)
       if format == :sequel
         ":varchar, :size => #{column.length}"
-      elsif format == :snowflake
+      elsif format == :postgresql
         "varchar(#{column.length})"
       else
         ":string, :limit => #{column.length}"

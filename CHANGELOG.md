@@ -2,7 +2,7 @@
 
 ## 4.2.1 - FORK
 
-- Print table schema for Snowflake
+- Print table schema for Postgresql
 
 ## 4.2.0
 
